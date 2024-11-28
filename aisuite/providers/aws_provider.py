@@ -4,6 +4,7 @@ import boto3
 from aisuite.provider import Provider, LLMError
 from aisuite.framework import ChatCompletionResponse
 
+import json
 from aisuite.providers import NORM_KWARGS_AWS
 
 
@@ -53,6 +54,15 @@ class AwsProvider(Provider):
             "content"
         ][0]["text"]
         return norm_response
+    
+    def normalize_response_stream(self, response):
+        """Normalize the response from the Bedrock API to match OpenAI's response format."""
+        stream = response.get('body')
+        if stream:
+            for event in stream:
+                chunk = json.loads(event.get('chunk').get('bytes').decode())
+                if chunk["type"] == 'content_block_delta':
+                    yield chunk["delta"]["text"]
 
     def chat_completions_create(self, model, messages, **kwargs):
         # Any exception raised by Anthropic will be returned to the caller.
@@ -94,12 +104,13 @@ class AwsProvider(Provider):
                 inferenceConfig=inference_config,
                 additionalModelRequestFields=additional_model_request_fields,
             )
-        else:
-            response = self.client.converse(
-                modelId=model,  # baseModelId or provisionedModelArn
-                messages=formatted_messages,
-                system=system_message,
-                inferenceConfig=inference_config,
-                additionalModelRequestFields=additional_model_request_fields,
-            )
+            return self.normalize_response_stream(response)
+        
+        response = self.client.converse(
+            modelId=model,  # baseModelId or provisionedModelArn
+            messages=formatted_messages,
+            system=system_message,
+            inferenceConfig=inference_config,
+            additionalModelRequestFields=additional_model_request_fields,
+        )
         return self.normalize_response(response)
