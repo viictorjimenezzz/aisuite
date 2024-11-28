@@ -29,11 +29,26 @@ class OpenaiProvider(Provider):
         }
         self.client = openai.OpenAI(**config)
 
+    def response_stream_generator(self, response):
+        with response as stream:
+            for text in stream:
+                yield text.choices[0].delta.content
+
     def chat_completions_create(self, model, messages, **kwargs):
         # Any exception raised by OpenAI will be returned to the caller.
         # Maybe we should catch them and raise a custom LLMError.
-        return self.client.chat.completions.create(
+        response = self.client.chat.completions.create(
             model=model,
             messages=messages,
             **kwargs  # Pass any additional arguments to the OpenAI API
         )
+
+        if kwargs.get("stream", False):
+            return self.response_stream_generator(response)
+        return response
+            
+            
+        
+    
+
+   
