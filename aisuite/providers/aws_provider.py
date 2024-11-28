@@ -106,7 +106,8 @@ class AwsProvider(Provider):
                 inferenceConfig=inference_config,
                 additionalModelRequestFields=additional_model_request_fields,
             )
-            return self.normalize_response_stream(response)
+            return response
+            # return self.normalize_response_stream(response)
         
         response = self.client.converse(
             modelId=model,  # baseModelId or provisionedModelArn
