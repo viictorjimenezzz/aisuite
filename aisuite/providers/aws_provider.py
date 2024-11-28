@@ -95,6 +95,8 @@ class AwsProvider(Provider):
             else:
                 additional_model_request_fields[key] = value
 
+        additional_model_request_fields.pop("stream", None)
+
         # Call the Bedrock Converse API.
         if kwargs.get("stream", False):
             response = self.client.conversestream(
