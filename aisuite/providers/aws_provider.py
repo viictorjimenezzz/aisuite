@@ -4,6 +4,8 @@ import boto3
 from aisuite.provider import Provider, LLMError
 from aisuite.framework import ChatCompletionResponse
 
+from aisuite.providers import NORM_KWARGS_AWS
+
 
 class AwsProvider(Provider):
     def __init__(self, **config):
@@ -76,7 +78,8 @@ class AwsProvider(Provider):
         additional_model_request_fields = {}
 
         # Iterate over the kwargs and separate the inference parameters and additional model request fields.
-        for key, value in kwargs.items():
+        for norm_key, value in kwargs.items():
+            key = NORM_KWARGS_AWS.get(norm_key, norm_key)
             if key in self.inference_parameters:
                 inference_config[key] = value
             else:

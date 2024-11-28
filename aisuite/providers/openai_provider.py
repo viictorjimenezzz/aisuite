@@ -2,6 +2,8 @@ import openai
 import os
 from aisuite.provider import Provider, LLMError
 
+from aisuite.providers import NORM_KWARGS_OPENAI
+
 
 class OpenaiProvider(Provider):
     def __init__(self, **config):
@@ -21,6 +23,10 @@ class OpenaiProvider(Provider):
         # Eg: OPENAI_API_KEY, OPENAI_ORG_ID, OPENAI_PROJECT_ID, OPENAI_BASE_URL, etc.
 
         # Pass the entire config to the OpenAI client constructor
+        config ={
+            NORM_KWARGS_OPENAI.get(norm_key, norm_key): value
+            for norm_key, value in config.items()
+        }
         self.client = openai.OpenAI(**config)
 
     def chat_completions_create(self, model, messages, **kwargs):
