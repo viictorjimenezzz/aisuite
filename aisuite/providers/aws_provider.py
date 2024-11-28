@@ -55,14 +55,16 @@ class AwsProvider(Provider):
         ][0]["text"]
         return norm_response
     
-    def normalize_response_stream(self, response):
+    def response_stream_generator(self, response):
         """Normalize the response from the Bedrock API to match OpenAI's response format."""
-        stream = response.get('body')
+        stream = response.get('stream')
         if stream:
             for event in stream:
-                chunk = json.loads(event.get('chunk').get('bytes').decode())
-                if chunk["type"] == 'content_block_delta':
-                    yield chunk["delta"]["text"]
+                chunk = event.get('contentBlockDelta', None)
+                if not chunk:
+                    continue
+
+                yield chunk.get('delta', {}).get('text', '')
 
     def chat_completions_create(self, model, messages, **kwargs):
         # Any exception raised by Anthropic will be returned to the caller.
@@ -106,8 +108,7 @@ class AwsProvider(Provider):
                 inferenceConfig=inference_config,
                 additionalModelRequestFields=additional_model_request_fields,
             )
-            return response
-            # return self.normalize_response_stream(response)
+            return self.response_stream_generator(response)
         
         response = self.client.converse(
             modelId=model,  # baseModelId or provisionedModelArn
