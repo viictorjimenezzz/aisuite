@@ -86,11 +86,20 @@ class AwsProvider(Provider):
                 additional_model_request_fields[key] = value
 
         # Call the Bedrock Converse API.
-        response = self.client.converse(
-            modelId=model,  # baseModelId or provisionedModelArn
-            messages=formatted_messages,
-            system=system_message,
-            inferenceConfig=inference_config,
-            additionalModelRequestFields=additional_model_request_fields,
-        )
+        if kwargs.get("stream", False):
+            response = self.client.conversestream(
+                modelId=model,  # baseModelId or provisionedModelArn
+                messages=formatted_messages,
+                system=system_message,
+                inferenceConfig=inference_config,
+                additionalModelRequestFields=additional_model_request_fields,
+            )
+        else:
+            response = self.client.converse(
+                modelId=model,  # baseModelId or provisionedModelArn
+                messages=formatted_messages,
+                system=system_message,
+                inferenceConfig=inference_config,
+                additionalModelRequestFields=additional_model_request_fields,
+            )
         return self.normalize_response(response)
