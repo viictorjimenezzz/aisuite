@@ -99,7 +99,7 @@ class AwsProvider(Provider):
 
         # Call the Bedrock Converse API.
         if kwargs.get("stream", False):
-            response = self.client.conversestream(
+            response = self.client.converse_stream(
                 modelId=model,  # baseModelId or provisionedModelArn
                 messages=formatted_messages,
                 system=system_message,
